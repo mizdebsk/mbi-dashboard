@@ -1,0 +1,13 @@
+{% macro state_icon(state) %}
+{% if state == 'Error' %}
+<i class="fas fa-times-circle" style="color: #E96D76;"></i>
+{% elif state == 'Failed' %}
+<i class="fas fa-exclamation-triangle" style="color: #E96D76;"></i>
+{% elif state == 'Pending' %}
+<i class="fas fa-cog fa-spin" style="color: #f4c030;"></i>
+{% elif state == 'Running' %}
+<i class="fas fa-circle-notch fa-spin" style="color: #0DADEA;"></i>
+{% elif state == 'Succeeded' %}
+<i class="fas fa-check-circle" style="color: #18BE94;"></i>
+{% endif %}
+{% endmacro %}

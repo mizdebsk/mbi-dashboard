@@ -1,0 +1,16 @@
+.kk-toggle-button[aria-expanded=false] .kk-expanded { display: none; }
+.kk-toggle-button[aria-expanded=true] .kk-collapsed { display: none; }
+
+body {
+  padding-top: 5rem;
+}
+
+table.version-dashboard thead { text-align: center; }
+
+.navbar img { margin-right: 0.5rem; }
+
+.logo {
+    font-family:sans;
+    font-weight:bold;
+    fill:white;
+}

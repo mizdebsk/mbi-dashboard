@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}build {{build.id}}{% endblock %}
+
+{% block content %}
+
+<main class="container">
+<div style='width: 30%; float: right'>
+  <h3>Legend</h3>
+  <ul>
+    <li>
+      {{ macros.state_icon('Pending') }}
+      Pending &mdash; The Pod has been accepted by the Kubernetes
+      cluster, but one or more of the containers has not been set up
+      and made ready to run. This includes time a Pod spends waiting
+      to be scheduled as well as the time spent downloading container
+      images over the network.
+    </li>
+    <li>
+      {{ macros.state_icon('Running') }}
+      Running &mdash; The Pod has been bound to a node, and all of the
+      containers have been created. At least one container is still
+      running, or is in the process of starting or restarting.
+    </li>
+    <li>
+      {{ macros.state_icon('Succeeded') }}
+      Succeeded &mdash; All containers in the Pod have terminated in
+      success, and will not be restarted.
+    </li>
+    <li>
+      {{ macros.state_icon('Failed') }}
+      Failed &mdash; All containers in the Pod have terminated, and at
+      least one container has terminated in failure. That is, the
+      container either exited with non-zero status or was terminated
+      by the system.
+    </li>
+    <li>
+      {{ macros.state_icon('Error') }}
+      Error &mdash; For some reason the state of the Pod could not be
+      obtained. This phase typically occurs due to an error in
+      communicating with the node where the Pod should be running.
+    </li>
+  </ul>
+</div>
+
+<h2>Module build {{build.id}}</h2>
+
+<p>Module build ID: {{ build.id }}
+<br/>Module name: {{ build.name }}
+<br/>State: {{ build.state }}
+<br/>Started at: {{ build.started }}
+<br/>Finished at: {{ build.finished }}</p>
+
+{% macro count_pods(pods) %}
+{% for state in states|reverse %}
+{% set n = pods|selectattr('state', 'equalto', state)|list|count %}
+{% if n %}
+<li>
+  {{ macros.state_icon(state) }}
+  <strong>{{ n }} build{% if n > 1 %}s{% endif %}</strong>
+  {{ state }}
+</li>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+{% macro pod_state(pod, text) %}
+{% set id = next_id() %}
+{{ macros.state_icon(pod.state) }}
+<strong>{{ text }}</strong>
+{{ pod.state }}
+
+{%
+set logs = {
+    'download': ['download.log'],
+    'srpm': ['build.log', 'checkout.log', 'root.log'],
+    'rpm': ['build.log', 'root.log'],
+    'repo': ['createrepo.log'],
+    'compose': ['gather.log', 'filter.log', 'createrepo.log', 'repoclosure.log'],
+}.get(pod.template)
+%}
+
+{%
+set logdir = {
+'compose': 'compose',
+'download': 'repo',
+}.get(pod.template) or (pod.template + '/' + (pod.component or pod.phase))
+%}
+
+
+{% if pod.state != 'Pending' %}
+(
+{% for log in logs %}
+<a href="/files/{{build.name}}/{{logdir}}/{{log}}">{{log}}</a>
+{% endfor %}
+)
+{% endif %}
+
+
+
+
+<a class="kk-toggle-button" data-bs-toggle="collapse" href="#{{id}}" role="button" aria-expanded="false" aria-controls="{{id}}">
+  <i class="kk-expanded fas fa-angle-double-up"></i>
+  <i class="kk-collapsed fas fa-angle-double-down"></i>
+</a>
+<div class="collapse" id="{{id}}">
+  <ul>
+    <li>Pod ID: <code>{{ pod.id }}</code></li>
+    <li>State: {{ pod.state }}</li>
+    {% if pod.reason %}
+    <li>Reason: {{ pod.reason }}</li>
+    {% endif %}
+    {% if pod.host %}
+    <li>Host: <code>{{ pod.host }}</code></li>
+    {% endif %}
+    {% if pod.started %}
+    <li>Started at: {{ pod.started }}</li>
+    {% endif %}
+    {% if pod.finished %}
+    <li>Finished at: {{ pod.finished }}</li>
+    {% endif %}
+  </ul>
+</div>
+{% endmacro %}
+
+<h3>Status overview</h3>
+<ul>
+  <li>
+    Build SRPMs:
+    <ul>{{ count_pods(build.srpms) }}</ul>
+  </li>
+  {% for phase in build.phases %}
+  <li>
+    Phase {{ phase.name }}
+    <ul>
+      {{ count_pods(phase.rpms) }}
+      {% if phase.repo %}
+      <li>{{ pod_state(phase.repo, 'createrepo') }}</li>
+      {% endif %}
+    </ul>
+  </li>
+  {% endfor %}
+  <li>
+    Compose
+    <ul>
+      {% if build.compose %}
+      <li>{{ pod_state(build.compose, 'compose') }}</li>
+      {% endif %}
+    </ul>
+  </li>
+</ul>
+
+{% for state in states %}
+{% set pods_in_state = build.pods|selectattr('state', 'equalto', state)|list %}
+{% if pods_in_state|count > 0 %}
+<h3>{{state}} Pods</h3>
+<ul>
+  {% for pod in pods_in_state %}
+  <li>
+    {{ pod_state(pod, pod.name) }}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endfor %}
+</main>
+
+{% endblock %}

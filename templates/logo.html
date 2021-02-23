@@ -1,0 +1,16 @@
+{% set font_size = 65 %}
+{% set img_height = 47 %}
+{% set img_width = 150 %}
+{% set txt_height = 4 %}
+{% set sep_height = 2 %}
+{% set tx = -6 %}
+{% set ty = 47 %}
+
+<svg class="logo" style="font-size:{{font_size}}px" height="{{img_height}}" width="{{img_width}}">
+  {% for i in range(0,8) %}
+  {% set y = i * (txt_height + sep_height) %}
+  <svg y="{{y}}" height="{{txt_height}}" width="{{img_width}}" viewbox="0 {{y}} {{img_width}} {{txt_height}}">
+    <text x="{{tx}}" y="{{ty}}">MBI</text>
+  </svg>
+  {% endfor %}
+</svg>

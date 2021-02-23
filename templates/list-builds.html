@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}builds{% endblock %}
+
+{% block content %}
+
+<main class="container-sm">
+<h2>Module builds</h2>
+<ul>
+  {% for build in builds %}
+  <li>
+    {{ macros.state_icon(build.state) }}
+    <a href="{{ url_for('build_details', id=build.id) }}">{{ build.id }}</a>
+    {{ build.state }}
+  </li>
+  {% endfor %}
+</ul>
+</main>
+
+{% endblock %}
