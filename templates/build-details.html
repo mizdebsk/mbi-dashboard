@@ -50,7 +50,9 @@
 <br/>Module name: {{ build.name }}
 <br/>State: {{ build.state }}
 <br/>Started at: {{ build.started }}
-<br/>Finished at: {{ build.finished }}</p>
+<br/>Finished at: {{ build.finished }}
+<br/><a href="/files/{{build.name}}/">results</a>
+</p>
 
 {% macro count_pods(pods) %}
 {% for state in states|reverse %}
