@@ -1,5 +1,5 @@
 import requests
-from config import API_URL
+from config import ARGO_API_URL, VERSIONS_URL
 from model import Pod, Phase, ModuleBuild
 
 
@@ -56,15 +56,24 @@ def parse_module_build(item):
     )
 
 
+def get_json(url):
+    response = requests.get(
+        url,
+        headers={'Accept': 'application/json"'},
+    )
+    if response.status_code != 200:
+        raise Exception(f"REST API failed with HTTP code {response.status_code}")
+    return response.json()
+
+
 class DAO:
     @property
     def builds(self):
-        response = requests.get(
-            API_URL,
-            headers={'Accept': 'application/json"'},
-        )
-        if response.status_code != 200:
-            raise Exception(f"REST API failed with HTTP code {response.status_code}")
-        data = response.json()
+        data = get_json(ARGO_API_URL)
         items = data.get('items') or []
         return [parse_module_build(item) for item in items]
+
+    @property
+    def versions(self):
+        data = get_json(VERSIONS_URL)
+        return data

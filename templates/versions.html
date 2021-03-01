@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}version dashboard{% endblock %}
+
+{% block content %}
+<main class="container-fluid">
+  <h2>Versions dashboard</h2>
+<p>
+  Based on data fetched at {{report_dict["time-generated"]}} by <code>{{report_dict["hostname"]}}</code>
+</p>
+<table class="version-dashboard table table-bordered table-striped table-hover">
+  <thead class="table-primary">
+    <tr>
+      <th rowspan="2">Package name</th>
+      <th colspan="{{ report_dict["version-columns"]["fedora"]|count }}">Fedora versions</th>
+      <th colspan="{{ report_dict["version-columns"]["mbi"]|count }}">MBI versions</th>
+      <th colspan="{{ report_dict["upstream-columns"]|count }}">Upstream version</th>
+      <th rowspan="2">Comments</th>
+      <th rowspan="2" colspan="1">Links (MBI)</th>
+    </tr>
+    <tr>
+      {% for version_name in report_dict["version-columns"]["fedora"] %}
+      <th>{{version_name}}</th>
+      {% endfor %}
+      {% for version_name in report_dict["version-columns"]["mbi"] %}
+      <th>{{version_name}}</th>
+      {% endfor %}
+      <th>Latest</th>
+      <th>Stable</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    {% set fedora_list = report_dict["version-columns"]["fedora"] %}
+    {% for package_name in report_dict["versions"] %}
+    <tr>
+      {% set package_dict = report_dict["versions"][package_name] %}
+      <td><code>{{package_name}}</code></td>
+		
+      {% set previous_version = namespace(value = package_dict["fedora"][fedora_list[0]]) %}
+      {% set current_version = namespace(value = None) %}
+      {% set colspan = namespace(value = 1) %}
+		
+      {% for index in range(1, fedora_list|count) %}
+      {% set current_version.value = package_dict["fedora"][fedora_list[index]] %}
+      {% if previous_version.value == current_version.value %}
+      {% set colspan.value = colspan.value + 1 %}
+      {% else %}
+      <td colspan="{{colspan.value}}">{{previous_version.value}}</td>
+      {% set colspan.value = 1 %}
+      {% set previous_version.value = current_version.value %}
+      {% endif %}
+      {% endfor %}
+      <td colspan="{{colspan.value}}">{{current_version.value}}</td>
+		
+      {% set jp_bootstrap_version = package_dict["mbi"].get("jp-bootstrap") %}
+      {% set mbi_version = package_dict["mbi"]["mbi"] %}
+      {% set latest_upstream_version = package_dict["upstream"]["latest"] %}
+      {% set latest_upstream_stable_version = package_dict["upstream"]["latest-stable"] %}
+		
+      {% set correct_version = package_dict["comments"].get("correct-version") %}
+      {% set keep_version = package_dict["comments"].get("keep-version") %}
+		
+      {% if jp_bootstrap_version != "" %}
+      {% set comparison = version_compare(jp_bootstrap_version, mbi_version) %}
+			
+      {% if correct_version != None and jp_bootstrap_version == correct_version %}
+      <td class="correct-version">
+	{% elif keep_version != None and jp_bootstrap_version == keep_version %}
+      <td class="keep-version">
+	{% elif comparison < 0 %}
+			     <td class="downgrade">
+			       {% elif comparison > 0 %}
+	  <td class="upgrade">
+	    {% else %}
+	  <td>
+	    {% endif %}
+	    {{jp_bootstrap_version}}</td>
+	  {% else %}
+	  <td></td>
+	  {% endif %}
+		
+	  {% set comparison = version_compare(mbi_version, latest_upstream_version) %}
+	  {% if correct_version != None and mbi_version == correct_version %}
+	  <td class="correct-version">
+	    {% elif keep_version != None and jp_bootstrap_version == keep_version %}
+	  <td class="keep-version">
+	    {% elif comparison < 0 %}
+				 {% if version_compare(mbi_version, latest_upstream_stable_version) >= 0 %}
+	      <td class="stable-up-to-date">
+		{% else %}
+	      <td class="downgrade">
+		{% endif %}
+		{% elif comparison > 0 %}
+	      <td class="upgrade">
+		{% else %}
+	      <td>
+		{% endif %}
+		{{mbi_version}}</td>
+		
+	      {% set latest = package_dict["upstream"]["latest"] %}
+	      {% set latest_stable = package_dict["upstream"]["latest-stable"] %}
+	      {% if latest == latest_stable %}
+	      <td colspan="2">{{latest}}</td>
+	      {% else %}
+	      <td>{{latest}}</td>
+	      <td>{{latest_stable}}</td>
+	      {% endif%}
+			
+	      <td>
+		{% set comments = package_dict.get("comments") %}
+		{% if comments != None %}
+		{{comments["comment"]|safe}}
+		{% endif%}
+	      </td>
+		
+	      <td>
+		<a href="https://src.fedoraproject.org/fork/mbi/rpms/{{package_name}}" target="_blank">dist-git</a>
+	      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<strong>Legend:</strong>
+<table>
+	<tr>
+		<td class="box" style="background-color: red;"></td>
+		<td>
+			Current version is older than its upstream version
+		</td>
+	</tr>
+	<tr>
+		<td class="box" style="background-color: blue;"></td>
+		<td>
+			Current version is newer than its upstream version.
+			This can indicate issues retrieving the upstream version.
+		</td>
+	</tr>
+	<tr>
+		<td class="box" style="background-color: darkgreen;"></td>
+		<td>
+			Current version is older than its upstream version which is
+			currently pre-release but newer or up-to-date with the upstream
+			latest stable version.
+		</td>
+	</tr>
+	<tr>
+		<td class="box" style="background-color: orange;"></td>
+		<td>
+			The version should be kept at the current version for reasons
+			specified in the comment.
+		</td>
+	</tr>
+	<tr>
+		<td class="box" style="background-color: darkorchid;"></td>
+		<td>
+			The retrieved upstream version is incorrect and current version is
+			equal to the latest correct upstream version.
+		</td>
+	</tr>
+</table>
+</main>
+
+{% endblock %}

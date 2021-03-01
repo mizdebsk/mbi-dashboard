@@ -21,15 +21,15 @@ def next_id(prefix='id'):
     last_id += 1
     return f"{prefix}-{last_id}"
 
-#import rpm
-#def version_compare(left: str, right: str) -> int:
-#    return rpm.labelCompare(("", left, ""), ("", right, ""))
+import rpm
+def version_compare(left: str, right: str) -> int:
+    return rpm.labelCompare(("", left, ""), ("", right, ""))
 
 
 app.jinja_env.globals.update(
     states=['Pending','Running', 'Succeeded', 'Failed', 'Error'],
     next_id=next_id,
-#    version_compare=version_compare,
+    version_compare=version_compare,
 )
 
 
@@ -55,14 +55,10 @@ def build_details(id):
         builds=builds,
     )
 
-#import json
-#with open('/mnt/nfs/versions/versions.json', "r") as f:
-#    report_dict = json.load(f)
-
-#@app.route('/versions')
-#def versions_dashboard():
-#    versions = report_dict
-#    return render_template(
-#        'versions.html',
-#        report_dict=versions,
-#    )
+@app.route('/versions')
+def versions_dashboard():
+    versions = dao.versions
+    return render_template(
+        'versions.html',
+        report_dict=versions,
+    )
