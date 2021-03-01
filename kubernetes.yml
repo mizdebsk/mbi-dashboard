@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mbi-dashboard
+spec:
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      service: mbi-dashboard
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: mbi-dashboard
+    spec:
+      containers:
+        - name: mbi-dashboard
+          image: quay.io/mizdebsk/mbi-dashboard:latest
+          env:
+            - name: ARGO_SERVER
+              value: argo-server:2746
+            - name: ARGO_NAMESPACE
+              value: default
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 500m
+              memory: 128Mi
+            limits:
+              cpu: 2000m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mbi-dashboard
+  labels:
+    service: mbi-dashboard
+spec:
+  ports:
+  - port: 8080
+  selector:
+    service: mbi-dashboard
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: dashboard
+spec:
+  rules:
+  - host: dashboard.kos.kjnet.xyz
+    http:
+      paths:
+      - backend:
+          serviceName: mbi-dashboard
+          servicePort: 8080
