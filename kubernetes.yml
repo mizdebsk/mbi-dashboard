@@ -23,6 +23,10 @@ spec:
               value: argo-server:2746
             - name: ARGO_NAMESPACE
               value: default
+            - name: VERSIONS_BACKEND
+              value: versions:8080
+            - name: MBS_BACKEND
+              value: mbs:8080
           ports:
             - containerPort: 8080
           resources:
