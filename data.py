@@ -1,4 +1,5 @@
 import requests
+import xunitparser
 from config import ARGO_API_URL, VERSIONS_URL
 from model import Pod, Phase, ModuleBuild
 
@@ -77,3 +78,12 @@ class DAO:
     def versions(self):
         data = get_json(VERSIONS_URL)
         return data
+
+    def test_result(self, test_id):
+        response = requests.get(f"http://mbs.kos.kjnet.xyz/{test_id}/compose/javapackages-validator.tap.xml")
+        if response.status_code != 200:
+            raise Exception(f"REST API failed with HTTP code {response.status_code}")
+        import io
+        data = io.StringIO(response.text)
+        ts, tr = xunitparser.parse(data)
+        return ts, tr

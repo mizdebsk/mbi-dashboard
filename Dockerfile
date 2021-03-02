@@ -8,6 +8,7 @@ RUN : \
       python3-gunicorn \
       python3-flask \
       python3-requests \
+      python3-xunitparser \
  && dnf -y clean all \
  && useradd web \
  && :

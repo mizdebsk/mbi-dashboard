@@ -51,7 +51,10 @@
 <br/>State: {{ build.state }}
 <br/>Started at: {{ build.started }}
 <br/>Finished at: {{ build.finished }}
-<br/><a href="/files/{{build.name}}/">results</a>
+<br/><a href="{{ url_for('test_result', id=build.name) }}">test results
+<br/><a href="/files/{{build.name}}/compose/">compose
+<br/><a href="/files/{{build.name}}/">other results
+</a>
 </p>
 
 {% macro count_pods(pods) %}

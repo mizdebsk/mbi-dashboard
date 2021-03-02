@@ -62,3 +62,12 @@ def versions_dashboard():
         'versions.html',
         report_dict=versions,
     )
+
+@app.route('/test/<id>')
+def test_result(id):
+    ts, tr = dao.test_result(id)
+    return render_template(
+        'test-result.html',
+        suite=ts,
+        result=tr,
+    )

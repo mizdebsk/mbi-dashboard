@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block title %}test result{% endblock %}
+
+{% block content %}
+
+<main class="container">
+
+<h2>Test result</h2>
+
+<ul>
+  <li>tests ran: {{ result.testsRun }}</li>
+  {% for state in ('failure', 'success') %}
+  {% set n = suite|selectattr('result', 'equalto', state)|list|count %}
+  {% if n %}
+  <li>
+    {% if n == result.testsRun %}
+    all
+    {% endif %}
+    {{ macros.state_icon(state) }}
+    <strong>{{ n }} test{% if n > 1 %}s{% endif %}</strong>
+    {{ state }}
+  </li>
+  {% endif %}
+  {% endfor %}
+</ul>
+
+{% macro case_info(case) %}
+{% if case.result == 'success' %}
+{{ macros.state_icon('Succeeded') }}
+{% else %}
+{{ macros.state_icon('Failed') }}
+{% endif %}
+{{ case.result }}
+{{ case.methodname }}
+{% endmacro %}
+
+<h3>Bad tests</h3>
+<ul>
+  {% for case in suite %}
+  {% if case.bad %}
+  <li>
+    {{ case_info(case) }}
+  </li>
+  {% endif %}
+  {% endfor %}
+</ul>
+
+<h3>Good tests</h3>
+{% set id = next_id() %}
+<a class="kk-toggle-button" data-bs-toggle="collapse" href="#{{id}}" role="button" aria-expanded="false" aria-controls="{{id}}">
+  <i class="kk-expanded fas fa-angle-double-up"></i>
+  <i class="kk-collapsed fas fa-angle-double-down"></i>
+</a>
+<div class="collapse" id="{{id}}">
+<ul>
+  {% for case in suite %}
+  {% if case.good %}
+  <li>
+    {{ case_info(case) }}
+  </li>
+  {% endif %}
+  {% endfor %}
+</ul>
+</div>
+
+</main>
+
+{% endblock %}
